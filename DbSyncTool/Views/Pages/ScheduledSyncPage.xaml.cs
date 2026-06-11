@@ -1486,9 +1486,11 @@ namespace DbSyncTool.Views.Pages
                                 resp.EnsureSuccessStatusCode();
                                 CheckBizSuccess(respBodyC);
                                 lock (bomLock) { progress.Success += rows.Count; progress.Processed += rows.Count; }
+                                // 接口成功后回写SQL（用该组第一行数据替换占位符）
+                                var wbMsgC = await ExecuteWriteBackSqlAsync(proc, rows[0], task);
                                 LogService.WriteApiLog(api.ApiName, api.Method.ToString(), api.Url,
                                     $"[处理{grp.Key} {rows.Count}条] " + arrayBody,
-                                    respStatusC, respBodyC, elapsedC, true);
+                                    respStatusC, respBodyC, elapsedC, true, writeBackMsg: wbMsgC);
 
                                 // 写同步标记
                                 if (useUpsert)
@@ -1512,16 +1514,20 @@ namespace DbSyncTool.Views.Pages
                             catch (BizSkipException ex)
                             {
                                 lock (bomLock) { progress.Processed += rows.Count; }
+                                var wbSkipMsgC = GetWriteBackSkipMsg(proc, respStatusC, ex.Message);
                                 LogService.WriteApiLog(api.ApiName, api.Method.ToString(), api.Url,
                                     $"[处理{grp.Key} {rows.Count}条] " + arrayBody,
-                                    respStatusC, respBodyC, elapsedC, false, ex.Message);
+                                    respStatusC, respBodyC, elapsedC, false, ex.Message,
+                                    writeBackMsg: wbSkipMsgC);
                             }
                             catch (Exception ex)
                             {
                                 lock (bomLock) { progress.Failed += rows.Count; progress.Processed += rows.Count; }
+                                var wbErrMsgC = GetWriteBackSkipMsg(proc, respStatusC, ex.Message);
                                 LogService.WriteApiLog(api.ApiName, api.Method.ToString(), api.Url,
                                     $"[处理{grp.Key} {rows.Count}条] " + arrayBody,
-                                    respStatusC, respBodyC, elapsedC, false, ex.Message);
+                                    respStatusC, respBodyC, elapsedC, false, ex.Message,
+                                    writeBackMsg: wbErrMsgC);
                             }
 
                             rows.Clear(); // 处理完立即释放内存
@@ -1780,24 +1786,29 @@ namespace DbSyncTool.Views.Pages
                                     CheckBizSuccess(respBodyOld);
                                     lock (bomLock) { progress.Success += rows.Count; progress.Processed += rows.Count; }
                                     // 接口成功后回写SQL（用该组第一行数据替换占位符）
-                                    await ExecuteWriteBackSqlAsync(proc, rows[0], task);
+                                    var wbMsgOld = await ExecuteWriteBackSqlAsync(proc, rows[0], task);
                                     LogService.WriteApiLog(api.ApiName, api.Method.ToString(), api.Url,
                                         $"[BOM:{grp.Key} {rows.Count}条] " + arrayBody,
-                                        respStatusOld, respBodyOld, elapsedMsOld, true);
+                                        respStatusOld, respBodyOld, elapsedMsOld, true,
+                                        writeBackMsg: wbMsgOld);
                                 }
                                 catch (BizSkipException ex)
                                 {
                                     lock (bomLock) { progress.Processed += rows.Count; }
+                                    var wbSkipOld = GetWriteBackSkipMsg(proc, respStatusOld, ex.Message);
                                     LogService.WriteApiLog(api.ApiName, api.Method.ToString(), api.Url,
                                         $"[BOM:{grp.Key} {rows.Count}条] " + arrayBody,
-                                        respStatusOld, respBodyOld, elapsedMsOld, false, ex.Message);
+                                        respStatusOld, respBodyOld, elapsedMsOld, false, ex.Message,
+                                        writeBackMsg: wbSkipOld);
                                 }
                                 catch (Exception ex)
                                 {
                                     lock (bomLock) { progress.Failed += rows.Count; progress.Processed += rows.Count; }
+                                    var wbErrOld = GetWriteBackSkipMsg(proc, respStatusOld, ex.Message);
                                     LogService.WriteApiLog(api.ApiName, api.Method.ToString(), api.Url,
                                         $"[BOM:{grp.Key} {rows.Count}条] " + arrayBody,
-                                        respStatusOld, respBodyOld, elapsedMsOld, false, ex.Message);
+                                        respStatusOld, respBodyOld, elapsedMsOld, false, ex.Message,
+                                        writeBackMsg: wbErrOld);
                                 }
 
                                 lock (bomLock)
@@ -1919,22 +1930,26 @@ namespace DbSyncTool.Views.Pages
                                 CheckBizSuccess(respBody3);
                                 lock (lockObj) { progress.Success++; }
                                 // 接口成功后回写SQL
-                                await ExecuteWriteBackSqlAsync(proc, row, task);
+                                var wbMsg3 = await ExecuteWriteBackSqlAsync(proc, row, task);
                                 LogService.WriteApiLog(
                                     api.ApiName, api.Method.ToString(), api.Url,
                                     body, respStatus3, respBody3,
-                                    elapsed3, true);
+                                    elapsed3, true, writeBackMsg: wbMsg3);
                             }
                             catch (BizSkipException ex)
                             {
+                                var wbSkipMsg3 = GetWriteBackSkipMsg(proc, respStatus3, ex.Message);
                                 LogService.WriteApiLog(api.ApiName, api.Method.ToString(), api.Url,
-                                    body, respStatus3, respBody3, elapsed3, false, ex.Message);
+                                    body, respStatus3, respBody3, elapsed3, false, ex.Message,
+                                    writeBackMsg: wbSkipMsg3);
                             }
                             catch (Exception ex)
                             {
                                 lock (lockObj) { progress.Failed++; }
+                                var wbErrMsg3 = GetWriteBackSkipMsg(proc, respStatus3, ex.Message);
                                 LogService.WriteApiLog(api.ApiName, api.Method.ToString(), api.Url,
-                                    body, respStatus3, respBody3, elapsed3, false, ex.Message);
+                                    body, respStatus3, respBody3, elapsed3, false, ex.Message,
+                                    writeBackMsg: wbErrMsg3);
                             }
 
                             lock (lockObj)
@@ -2216,12 +2231,12 @@ namespace DbSyncTool.Views.Pages
             onProgress(progress);
         }
 
-        /// <summary>接口成功后执行回写SQL，失败只记日志不影响主流程</summary>
-        private static async System.Threading.Tasks.Task ExecuteWriteBackSqlAsync(
+        /// <summary>接口成功后执行回写SQL，返回回写结果描述（用于写入API日志）</summary>
+        private static async Task<string> ExecuteWriteBackSqlAsync(
             ProcConfig proc, Dictionary<string, object?> row, TaskConfig task)
         {
             if (string.IsNullOrWhiteSpace(proc.WriteBackSql) || proc.WriteBackDbConfigId <= 0)
-                return;
+                return "";
             var wbSqlFinal = "";
             try
             {
@@ -2229,10 +2244,9 @@ namespace DbSyncTool.Views.Pages
                     .FirstOrDefault(d => d.Id == proc.WriteBackDbConfigId);
                 if (wbDbCfg == null)
                 {
-                    LogService.WriteWarning(
-                        $"[回写SQL跳过] 找不到目标数据库配置 ID={proc.WriteBackDbConfigId}",
-                        "WriteBack");
-                    return;
+                    var warnMsg = $"回写跳过，找不到目标数据库配置 ID={proc.WriteBackDbConfigId}";
+                    LogService.WriteWarning($"[回写SQL跳过] {warnMsg}", "WriteBack");
+                    return warnMsg;
                 }
 
                 wbSqlFinal = proc.WriteBackSql
@@ -2245,16 +2259,26 @@ namespace DbSyncTool.Views.Pages
                 else
                     await new DataAccess.MySqlHelper(wbDbCfg).ExecuteNonQueryAsync(wbSqlFinal);
 
-                LogService.WriteInfo(
-                    $"[回写SQL成功] {wbSqlFinal}",
-                    "WriteBack");
+                var successMsg = $"回写成功，SQL：{wbSqlFinal}";
+                LogService.WriteInfo($"[回写SQL成功] {wbSqlFinal}", "WriteBack");
+                return successMsg;
             }
             catch (Exception exWb)
             {
+                var failMsg = $"回写失败，原因：{exWb.Message}，SQL：{wbSqlFinal}";
                 LogService.WriteError(
                     $"[回写SQL失败] SQL={wbSqlFinal} | 原因={exWb.Message}",
                     exWb, task.Id.ToString(), "WriteBack");
+                return failMsg;
             }
+        }
+
+        /// <summary>接口跳过时生成回写失败说明（用于写入API日志）</summary>
+        private static string GetWriteBackSkipMsg(ProcConfig proc, int? statusCode, string? bizMsg)
+        {
+            if (string.IsNullOrWhiteSpace(proc.WriteBackSql) || proc.WriteBackDbConfigId <= 0)
+                return "";
+            return $"回写失败，原因：【返回状态码：{statusCode}，{bizMsg}】";
         }
 
         /// <summary>检查业务层是否成功（success=false 时抛异常）</summary>

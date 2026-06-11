@@ -73,7 +73,8 @@ namespace DbSyncTool.Helpers
         public static void WriteApiLog(
             string apiName, string method, string url,
             string requestBody, int? statusCode, string? responseBody,
-            long elapsedMs, bool success, string? errorMsg = null)
+            long elapsedMs, bool success, string? errorMsg = null,
+            string? writeBackMsg = null)
         {
             lock (_lockApi)
             {
@@ -101,6 +102,8 @@ namespace DbSyncTool.Helpers
                 sb.AppendLine($"  耗时     : {elapsedMs}ms");
                 if (!string.IsNullOrWhiteSpace(errorMsg))
                     sb.AppendLine($"  错误信息 : {errorMsg}");
+                if (!string.IsNullOrWhiteSpace(writeBackMsg))
+                    sb.AppendLine($"  回写信息 : {writeBackMsg}");
                 sb.AppendLine(new string('-', 80));
 
                 File.AppendAllText(GetApiLogPath(apiName), sb.ToString(), Encoding.UTF8);

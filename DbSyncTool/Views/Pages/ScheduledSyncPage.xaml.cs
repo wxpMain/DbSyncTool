@@ -2222,25 +2222,38 @@ namespace DbSyncTool.Views.Pages
         {
             if (string.IsNullOrWhiteSpace(proc.WriteBackSql) || proc.WriteBackDbConfigId <= 0)
                 return;
+            var wbSqlFinal = "";
             try
             {
                 var wbDbCfg = ConfigStore.LoadDbConfigs()
                     .FirstOrDefault(d => d.Id == proc.WriteBackDbConfigId);
-                if (wbDbCfg == null) return;
+                if (wbDbCfg == null)
+                {
+                    LogService.WriteWarning(
+                        $"[回写SQL跳过] 找不到目标数据库配置 ID={proc.WriteBackDbConfigId}",
+                        "WriteBack");
+                    return;
+                }
 
-                var wbSql = proc.WriteBackSql
+                wbSqlFinal = proc.WriteBackSql
                     .Replace("{{now}}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 foreach (var kv in row)
-                    wbSql = wbSql.Replace($"{{{{{kv.Key}}}}}", kv.Value?.ToString() ?? "");
+                    wbSqlFinal = wbSqlFinal.Replace($"{{{{{kv.Key}}}}}", kv.Value?.ToString() ?? "");
 
                 if (wbDbCfg.DbType == DbType.SqlServer)
-                    await new DataAccess.SqlServerHelper(wbDbCfg).ExecuteNonQueryAsync(wbSql);
+                    await new DataAccess.SqlServerHelper(wbDbCfg).ExecuteNonQueryAsync(wbSqlFinal);
                 else
-                    await new DataAccess.MySqlHelper(wbDbCfg).ExecuteNonQueryAsync(wbSql);
+                    await new DataAccess.MySqlHelper(wbDbCfg).ExecuteNonQueryAsync(wbSqlFinal);
+
+                LogService.WriteInfo(
+                    $"[回写SQL成功] {wbSqlFinal}",
+                    "WriteBack");
             }
             catch (Exception exWb)
             {
-                LogService.WriteError("回写SQL执行失败", exWb, task.Id.ToString(), "SyncExecutor");
+                LogService.WriteError(
+                    $"[回写SQL失败] SQL={wbSqlFinal} | 原因={exWb.Message}",
+                    exWb, task.Id.ToString(), "WriteBack");
             }
         }
 
@@ -2276,11 +2289,3 @@ namespace DbSyncTool.Views.Pages
         }
     }
 }
-
-
-
-
-
-
-
-

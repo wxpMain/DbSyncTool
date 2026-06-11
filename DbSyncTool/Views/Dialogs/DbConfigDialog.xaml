@@ -1,0 +1,125 @@
+<Window x:Class="DbSyncTool.Views.Dialogs.DbConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="数据库连接配置"
+        Width="520" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="White">
+
+    <Grid>
+        <!-- 标题栏 -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="56"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="{StaticResource AccentBlueBrush}">
+            <Grid Margin="16,0">
+                <TextBlock x:Name="DialogTitle" Text="新增数据库连接" FontSize="15" FontWeight="SemiBold"
+                           Foreground="White" VerticalAlignment="Center"/>
+                <Button Content="✕" HorizontalAlignment="Right" Background="Transparent"
+                        BorderThickness="0" Foreground="White" FontSize="16" Cursor="Hand"
+                        Click="Close_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- 表单内容 -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid Margin="24,16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="16"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 配置名称 -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="配置名称 *" Style="{StaticResource FormLabel}"/>
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="TxtConfigName" Style="{StaticResource InputTextBox}"/>
+
+                <!-- 数据库类型 -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="数据库类型 *" Style="{StaticResource FormLabel}"/>
+                <ComboBox Grid.Row="2" Grid.Column="1" x:Name="CmbDbType" Style="{StaticResource InputComboBox}"
+                          SelectionChanged="DbType_Changed">
+                    <ComboBoxItem Content="SQL Server" Tag="SqlServer"/>
+                    <ComboBoxItem Content="MySQL" Tag="MySQL"/>
+                </ComboBox>
+
+                <!-- 服务器地址 -->
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="服务器地址 *" Style="{StaticResource FormLabel}"/>
+                <TextBox Grid.Row="4" Grid.Column="1" x:Name="TxtServer" Style="{StaticResource InputTextBox}"
+                         ToolTip="IP地址或域名，如：192.168.1.100"/>
+
+                <!-- 端口 -->
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="端口 *" Style="{StaticResource FormLabel}"/>
+                <TextBox Grid.Row="6" Grid.Column="1" x:Name="TxtPort" Style="{StaticResource InputTextBox}"
+                         Text="1433"/>
+
+                <!-- 数据库名 -->
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="数据库名 *" Style="{StaticResource FormLabel}"/>
+                <TextBox Grid.Row="8" Grid.Column="1" x:Name="TxtDatabase" Style="{StaticResource InputTextBox}"/>
+
+                <!-- 账号 -->
+                <TextBlock Grid.Row="10" Grid.Column="0" Text="账号 *" Style="{StaticResource FormLabel}"/>
+                <TextBox Grid.Row="10" Grid.Column="1" x:Name="TxtAccount" Style="{StaticResource InputTextBox}"/>
+
+                <!-- 密码 -->
+                <TextBlock Grid.Row="12" Grid.Column="0" Text="密码 *" Style="{StaticResource FormLabel}"/>
+                <PasswordBox Grid.Row="12" Grid.Column="1" x:Name="TxtPassword" Style="{StaticResource InputPasswordBox}"/>
+
+                <!-- 连接超时 -->
+                <TextBlock Grid.Row="14" Grid.Column="0" Text="连接超时(秒)" Style="{StaticResource FormLabel}"/>
+                <TextBox Grid.Row="14" Grid.Column="1" x:Name="TxtTimeout" Style="{StaticResource InputTextBox}" Text="30"/>
+
+                <!-- 字符集 (MySQL) -->
+                <TextBlock Grid.Row="16" Grid.Column="0" Text="字符集" Style="{StaticResource FormLabel}"
+                           x:Name="LblCharset"/>
+                <ComboBox Grid.Row="16" Grid.Column="1" x:Name="CmbCharset" Style="{StaticResource InputComboBox}"
+                          x:FieldModifier="private" Visibility="Collapsed">
+                    <ComboBoxItem Content="utf8mb4" IsSelected="True"/>
+                    <ComboBoxItem Content="utf8"/>
+                    <ComboBoxItem Content="gbk"/>
+                </ComboBox>
+
+                <!-- 测试连接结果 -->
+                <TextBlock Grid.Row="18" Grid.Column="0" Grid.ColumnSpan="2"
+                           x:Name="TestResultText" FontSize="12" Margin="0,4,0,0"/>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- 底部按钮 -->
+        <Border Grid.Row="2" BorderBrush="{StaticResource BorderGrayBrush}" BorderThickness="0,1,0,0"
+                Background="White">
+            <Grid Margin="24,0">
+                <Button x:Name="TestConnBtn" Content="测试连接"
+                        Style="{StaticResource SecondaryButton}"
+                        HorizontalAlignment="Left" Click="TestConn_Click"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="取消" Style="{StaticResource SecondaryButton}"
+                            Click="Cancel_Click" Margin="0,0,8,0"/>
+                    <Button Content="保存" Style="{StaticResource PrimaryButton}"
+                            Click="Save_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

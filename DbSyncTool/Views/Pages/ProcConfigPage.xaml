@@ -1,0 +1,82 @@
+<Page x:Class="DbSyncTool.Views.Pages.ProcConfigPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Title="存储过程配置" Background="#F0F2F5">
+
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- 页标题 -->
+    <Grid Grid.Row="0" Margin="0,0,0,16">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <StackPanel>
+        <TextBlock Text="存储过程配置" Style="{StaticResource PageTitle}"/>
+        <TextBlock Text="配置源库查询SQL和目标库写入规则，替代字典匹配+数据调用两步操作"
+                   FontSize="12" Foreground="#718096" Margin="0,4,0,0"/>
+      </StackPanel>
+      <Button Grid.Column="1" Content="＋ 新增配置" Style="{StaticResource PrimaryButton}"
+              VerticalAlignment="Center" Click="AddNew_Click"/>
+    </Grid>
+
+    <!-- 搜索 -->
+    <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="16,12" Margin="0,0,0,16">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="16"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="8"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <TextBox Grid.Column="0" x:Name="SearchName" Style="{StaticResource InputTextBox}"
+                 Tag="搜索配置名称..."/>
+        <Button Grid.Column="2" Content="搜索" Style="{StaticResource PrimaryButton}"
+                Click="Search_Click" Padding="16,6"/>
+        <Button Grid.Column="4" Content="重置" Style="{StaticResource SecondaryButton}"
+                Click="Reset_Click" Padding="16,6"/>
+      </Grid>
+    </Border>
+
+    <!-- 列表 -->
+    <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="0">
+      <DataGrid x:Name="ProcGrid" Style="{StaticResource ModernDataGrid}"
+                AutoGenerateColumns="False" IsReadOnly="True"
+                HorizontalScrollBarVisibility="Visible"
+                ColumnWidth="Auto">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
+          <DataGridTextColumn Header="配置名称" Binding="{Binding ConfigName}" Width="180"/>
+          <DataGridTextColumn Header="源数据库" Binding="{Binding SourceDbName}" Width="200"/>
+          <DataGridTextColumn Header="调用内容" Binding="{Binding TargetDbName}" Width="200"/>
+          <DataGridTextColumn Header="目标表" Binding="{Binding TargetTable}" Width="140"/>
+          <DataGridTextColumn Header="同步模式" Binding="{Binding SyncModeDisplay}" Width="70"/>
+          <DataGridTextColumn Header="字段映射数" Binding="{Binding MappingCount}" Width="80"/>
+          <DataGridTextColumn Header="更新时间" Binding="{Binding UpdateTime, StringFormat='yyyy-MM-dd HH:mm'}" Width="130"/>
+          <DataGridTemplateColumn Header="操作" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" Margin="4,0">
+                  <Button Content="编辑" Tag="{Binding Id}" Style="{StaticResource PrimaryButton}"
+                          Padding="10,4" FontSize="12" Margin="0,0,6,0" Click="Edit_Click"/>
+                  <Button Content="删除" Tag="{Binding Id}" Style="{StaticResource DangerButton}"
+                          Padding="10,4" FontSize="12" Click="Delete_Click"/>
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+    </Border>
+
+    <TextBlock Grid.Row="3" x:Name="TotalCountText" Text="共 0 条"
+               Foreground="#718096" FontSize="12" Margin="0,8,0,0"/>
+  </Grid>
+</Page>

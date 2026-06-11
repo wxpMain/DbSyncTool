@@ -1,0 +1,351 @@
+<Window x:Class="DbSyncTool.Views.Dialogs.DictMatchDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="字典匹配配置"
+        Width="1000" Height="780"
+        WindowStartupLocation="CenterOwner"
+        Background="White">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="48"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="56"/>
+    </Grid.RowDefinitions>
+
+    <!-- 标题栏 -->
+    <Border Grid.Row="0" Background="{StaticResource AccentBlueBrush}">
+      <Grid Margin="16,0">
+        <TextBlock x:Name="DialogTitle" Text="新增字典匹配" FontSize="15" FontWeight="SemiBold"
+                   Foreground="White" VerticalAlignment="Center"/>
+        <Button Content="✕" HorizontalAlignment="Right" Background="Transparent"
+                BorderThickness="0" Foreground="White" FontSize="16" Cursor="Hand"
+                Click="Close_Click"/>
+      </Grid>
+    </Border>
+
+    <!-- 主体 -->
+    <Grid Grid.Row="1" Margin="16">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>   <!-- 0: 基础信息 -->
+        <RowDefinition Height="8"/>
+        <RowDefinition Height="Auto"/>   <!-- 2: 自定义SQL（可折叠） -->
+        <RowDefinition Height="8"/>
+        <RowDefinition Height="*"/>      <!-- 4: 左右字段选择 -->
+        <RowDefinition Height="8"/>
+        <RowDefinition Height="Auto"/>   <!-- 6: 映射标题+按钮 -->
+        <RowDefinition Height="8"/>
+        <RowDefinition Height="180"/>    <!-- 8: 映射列表 -->
+      </Grid.RowDefinitions>
+
+      <!-- ① 基础信息 -->
+      <Grid Grid.Row="0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="16"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="16"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0">
+          <TextBlock Text="配置名称 *" Style="{StaticResource FormLabel}" Margin="0,0,0,4"/>
+          <TextBox x:Name="TxtConfigName" Style="{StaticResource InputTextBox}"/>
+        </StackPanel>
+        <StackPanel Grid.Column="2">
+          <TextBlock Text="源数据库 *" Style="{StaticResource FormLabel}" Margin="0,0,0,4"/>
+          <ComboBox x:Name="CmbSourceDb" Style="{StaticResource InputComboBox}"
+                    SelectionChanged="SourceDb_Changed"/>
+        </StackPanel>
+        <StackPanel Grid.Column="4">
+          <TextBlock Text="目标数据库 *" Style="{StaticResource FormLabel}" Margin="0,0,0,4"/>
+          <ComboBox x:Name="CmbTargetDb" Style="{StaticResource InputComboBox}"
+                    SelectionChanged="TargetDb_Changed"/>
+        </StackPanel>
+      </Grid>
+
+      <!-- ② 自定义SQL -->
+      <Border Grid.Row="2" Style="{StaticResource CardStyle}" Padding="12,10">
+        <StackPanel>
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="ChkCustomSql" FontSize="12" FontWeight="Medium"
+                      Foreground="#2D3748" VerticalAlignment="Center"
+                      Content="启用自定义SQL（多表JOIN场景，如主表+子表合并到一张表）"
+                      Checked="ChkCustomSql_Changed" Unchecked="ChkCustomSql_Changed"/>
+            <Button Grid.Column="1" x:Name="BtnValidateSql" Content="验证SQL"
+                    Style="{StaticResource SecondaryButton}" Padding="12,4"
+                    FontSize="12" IsEnabled="False" Click="BtnValidateSql_Click"/>
+          </Grid>
+          <TextBlock x:Name="LblSqlHint" Margin="0,6,0,4" FontSize="11" Foreground="#718096"
+                     Visibility="Collapsed" TextWrapping="Wrap"
+                     Text="示例：SELECT h.BillNo, h.BillDate, d.ItemCode, d.Qty FROM BOM_Header h JOIN BOM_Detail d ON h.BillNo = d.BillNo"/>
+          <TextBox x:Name="TxtCustomSql" Visibility="Collapsed"
+                   Style="{StaticResource InputTextBox}"
+                   Height="72" AcceptsReturn="True" TextWrapping="Wrap"
+                   VerticalScrollBarVisibility="Auto"
+                   FontFamily="Consolas" FontSize="12"
+                   ToolTip="输入SELECT语句，支持多表JOIN，不要加分号"/>
+        </StackPanel>
+      </Border>
+
+      <!-- ③ 左右字段选择区 -->
+      <Grid Grid.Row="4">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="8"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 源数据库字段树 -->
+        <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="0">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="36"/>
+              <RowDefinition Height="38"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Background="#EBF4FF" CornerRadius="6,6,0,0"
+                    BorderBrush="#BEE3F8" BorderThickness="0,0,0,1">
+              <StackPanel Orientation="Horizontal" Margin="12,0">
+                <TextBlock Text="源数据库字段" FontWeight="SemiBold" FontSize="12"
+                           Foreground="#2B6CB0" VerticalAlignment="Center"/>
+                <TextBlock Text="（勾选字段添加映射）" FontSize="11"
+                           Foreground="#718096" VerticalAlignment="Center" Margin="8,0,0,0"/>
+              </StackPanel>
+            </Border>
+            <Grid Grid.Row="1" Margin="8,4">
+              <TextBox x:Name="TxtSourceSearch" Style="{StaticResource InputTextBox}"
+                       Height="28" FontSize="12" TextChanged="TxtSourceSearch_Changed"/>
+              <TextBlock Text="🔍 搜索表名或字段名..." FontSize="12" Foreground="#A0AEC0"
+                         IsHitTestVisible="False" VerticalAlignment="Center" Margin="10,0">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding Text, ElementName=TxtSourceSearch}" Value="">
+                        <Setter Property="Visibility" Value="Visible"/>
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </Grid>
+            <TreeView Grid.Row="2" x:Name="SourceTree" BorderThickness="0"
+                      Background="Transparent" Padding="4"/>
+          </Grid>
+        </Border>
+
+        <!-- 目标数据库字段树 -->
+        <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="0">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="36"/>
+              <RowDefinition Height="38"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" Background="#F0FFF4" CornerRadius="6,6,0,0"
+                    BorderBrush="#9AE6B4" BorderThickness="0,0,0,1">
+              <StackPanel Orientation="Horizontal" Margin="12,0">
+                <TextBlock Text="目标数据库字段" FontWeight="SemiBold" FontSize="12"
+                           Foreground="#276749" VerticalAlignment="Center"/>
+                <TextBlock Text="（勾选字段设为映射目标）" FontSize="11"
+                           Foreground="#718096" VerticalAlignment="Center" Margin="8,0,0,0"/>
+              </StackPanel>
+            </Border>
+            <!-- 搜索框：搜索表名或字段名 -->
+            <Grid Grid.Row="1" Margin="8,4">
+              <TextBox x:Name="TxtTargetSearch" Style="{StaticResource InputTextBox}"
+                       Height="28" FontSize="12" TextChanged="TxtTargetSearch_Changed"/>
+              <TextBlock Text="🔍 搜索表名或字段名..." FontSize="12" Foreground="#A0AEC0"
+                         IsHitTestVisible="False" VerticalAlignment="Center" Margin="10,0">
+                <TextBlock.Style>
+                  <Style TargetType="TextBlock">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding Text, ElementName=TxtTargetSearch}" Value="">
+                        <Setter Property="Visibility" Value="Visible"/>
+                      </DataTrigger>
+                    </Style.Triggers>
+                  </Style>
+                </TextBlock.Style>
+              </TextBlock>
+            </Grid>
+            <!-- 目标表下拉（保留，用于自动匹配） -->
+            <Grid Grid.Row="2" Margin="8,0,8,4">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <TextBlock Text="目标表：" Style="{StaticResource FormLabel}"
+                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+              <ComboBox Grid.Column="1" x:Name="CmbTargetTable"
+                        Style="{StaticResource InputComboBox}"
+                        IsEditable="True" IsTextSearchEnabled="False"
+                        StaysOpenOnEdit="True"
+                        DropDownOpened="CmbTargetTable_DropDownOpened"
+                        SelectionChanged="TargetTable_Changed"/>
+            </Grid>
+            <!-- 目标字段树 -->
+            <TreeView Grid.Row="3" x:Name="TargetTree" BorderThickness="0"
+                      Background="Transparent" Padding="4"/>
+          </Grid>
+        </Border>
+      </Grid>
+
+      <!-- ④ 映射标题+操作按钮 -->
+      <Grid Grid.Row="6">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Border Width="4" Height="16" Background="#3182CE" CornerRadius="2" Margin="0,0,8,0"/>
+          <TextBlock Text="字段映射关系" FontWeight="SemiBold" FontSize="13"
+                     Foreground="#2D3748" VerticalAlignment="Center"/>
+          <TextBlock x:Name="TxtMappingCount" Text="（0 对）" FontSize="12"
+                     Foreground="#718096" VerticalAlignment="Center" Margin="6,0,0,0"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+          <!-- 自定义SQL模式：手动输入源字段名 -->
+          <Border x:Name="PnlManualInput" Visibility="Collapsed"
+                  BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4"
+                  Padding="6,0" Margin="0,0,8,0" Background="#F7FAFC">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="源字段名:" FontSize="12" Foreground="#718096"
+                         VerticalAlignment="Center" Margin="0,0,6,0"/>
+              <TextBox x:Name="TxtManualSrcField" Width="120" Height="28"
+                       Style="{StaticResource InputTextBox}" FontSize="12"
+                       ToolTip="输入自定义SQL中的列别名，如：ParentId"/>
+              <TextBlock Text="类型:" FontSize="12" Foreground="#718096"
+                         VerticalAlignment="Center" Margin="8,0,6,0"/>
+              <TextBox x:Name="TxtManualSrcType" Width="80" Height="28"
+                       Style="{StaticResource InputTextBox}" FontSize="12" Text="varchar"
+                       ToolTip="字段类型，如：int、varchar、decimal"/>
+            </StackPanel>
+          </Border>
+          <Button Content="＋ 添加映射" Style="{StaticResource PrimaryButton}"
+                  Padding="12,5" FontSize="12" Click="AddMapping_Click" Margin="0,0,8,0"
+                  ToolTip="自定义SQL模式：在左侧输入源字段名 + 右侧点选目标字段&#10;普通模式：左侧勾选源字段 + 右侧点选目标字段"/>
+          <Button Content="✕ 删除最后一条" Style="{StaticResource DangerButton}"
+                  Padding="12,5" FontSize="12" Click="DeleteMapping_Click" Margin="0,0,8,0"/>
+          <Button Content="清空" Style="{StaticResource SecondaryButton}"
+                  Padding="12,5" FontSize="12" Click="ClearMappings_Click"/>
+        </StackPanel>
+      </Grid>
+
+      <!-- ⑤ 映射列表 -->
+      <Border Grid.Row="8" Style="{StaticResource CardStyle}" Padding="0">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+          <Grid Grid.Row="0" Background="#F7FAFC">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="28"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="40"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="60"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="#" FontSize="11" FontWeight="SemiBold"
+                       Foreground="#718096" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="源字段  /  源表" FontSize="11" FontWeight="SemiBold"
+                       Foreground="#2B6CB0" VerticalAlignment="Center" Margin="8,0"/>
+            <TextBlock Grid.Column="2" Text="→" FontSize="14" Foreground="#CBD5E0"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="3" Text="目标字段  /  目标表" FontSize="11" FontWeight="SemiBold"
+                       Foreground="#276749" VerticalAlignment="Center" Margin="8,0"/>
+            <TextBlock Grid.Column="4" Text="操作" FontSize="11" FontWeight="SemiBold"
+                       Foreground="#718096" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Grid>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="MappingPanel" Margin="0,2">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" MinHeight="48">
+                    <Border.Style>
+                      <Style TargetType="Border">
+                        <Style.Triggers>
+                          <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#F7FAFC"/>
+                          </Trigger>
+                        </Style.Triggers>
+                      </Style>
+                    </Border.Style>
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Grid.Column="0" Text="{Binding SortOrder}" FontSize="11"
+                                 Foreground="#A0AEC0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,6">
+                        <Border Background="#EBF4FF" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                          <StackPanel>
+                            <TextBlock Text="{Binding SourceFieldName}" FontSize="12"
+                                       FontWeight="SemiBold" Foreground="#2B6CB0"/>
+                            <TextBlock FontSize="10" Foreground="#718096" Margin="0,1,0,0">
+                              <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0}  ·  {1}">
+                                  <Binding Path="SourceTableName"/>
+                                  <Binding Path="SourceFieldType"/>
+                                </MultiBinding>
+                              </TextBlock.Text>
+                            </TextBlock>
+                          </StackPanel>
+                        </Border>
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Text="→" FontSize="18" Foreground="#CBD5E0"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                      <StackPanel Grid.Column="3" VerticalAlignment="Center" Margin="8,6">
+                        <Border Background="#F0FFF4" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left">
+                          <StackPanel>
+                            <TextBlock Text="{Binding TargetFieldName}" FontSize="12"
+                                       FontWeight="SemiBold" Foreground="#276749"/>
+                            <TextBlock FontSize="10" Foreground="#718096" Margin="0,1,0,0">
+                              <TextBlock.Text>
+                                <MultiBinding StringFormat="{}{0}  ·  {1}">
+                                  <Binding Path="TargetTableName"/>
+                                  <Binding Path="TargetFieldType"/>
+                                </MultiBinding>
+                              </TextBlock.Text>
+                            </TextBlock>
+                          </StackPanel>
+                        </Border>
+                      </StackPanel>
+                      <Button Grid.Column="4" Content="✕" Tag="{Binding}"
+                              Background="Transparent" BorderThickness="0"
+                              Foreground="#FC8181" FontSize="14" Cursor="Hand"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                              Click="RemoveOneMapping_Click"/>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- 底部按钮 -->
+    <Border Grid.Row="2" BorderBrush="{StaticResource BorderGrayBrush}"
+            BorderThickness="0,1,0,0" Background="White">
+      <Grid Margin="24,0">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <Button Content="取消" Style="{StaticResource SecondaryButton}"
+                  Click="Cancel_Click" Margin="0,0,8,0"/>
+          <Button Content="保存配置" Style="{StaticResource PrimaryButton}" Click="Save_Click"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

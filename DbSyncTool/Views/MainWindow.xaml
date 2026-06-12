@@ -1,7 +1,7 @@
 <Window x:Class="DbSyncTool.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MES 中间库数据同步工具"
+        Title="本地中间库数据同步工具"
         Height="700" Width="1200"
         MinHeight="600" MinWidth="900"
         WindowStartupLocation="CenterScreen"
@@ -30,7 +30,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="MES 中间库同步工具" FontSize="16" FontWeight="Bold"
+                    <TextBlock Text="本地中间库同步工具" FontSize="16" FontWeight="Bold"
                                Foreground="White" VerticalAlignment="Center" Margin="16,0"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"

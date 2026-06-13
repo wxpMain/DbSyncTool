@@ -44,6 +44,12 @@ namespace DbSyncTool.Views
                 return;
             }
 
+            if (page == "SqlTool")
+            {
+                MainFrame.Navigate(new SqlToolPage());
+                return;
+            }
+
             if (!_pageCache.TryGetValue(page, out var cached))
             {
                 cached = page switch
@@ -54,6 +60,7 @@ namespace DbSyncTool.Views
                     "ApiConfig" => new ApiConfigPage(),
                     "TaskConfig" => new TaskConfigPage(),
                     "ScheduledSync" => new ScheduledSyncPage(),
+                    "SqlTool" => new SqlToolPage(),
                     _ => new DbConfigPage()
                 };
                 _pageCache[page] = cached;
@@ -74,6 +81,7 @@ namespace DbSyncTool.Views
                 "TaskConfig" => "任务配置",
                 "ScheduledSync" => "定时任务同步",
                 "LogView" => "日志查看",
+                "SqlTool" => "SQL工具",
                 _ => ""
             };
             BreadcrumbText.Text = $"主页 > {name}";

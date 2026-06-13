@@ -136,14 +136,14 @@ namespace DbSyncTool.DataAccess
         }
 
         /// <summary>执行任意非查询SQL（UPDATE/DELETE/CALL等）</summary>
-        public async Task ExecuteNonQueryAsync(string sql)
+        public async Task<int> ExecuteNonQueryAsync(string sql)
         {
             await using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
             var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
             cmd.CommandTimeout = 300;
-            await cmd.ExecuteNonQueryAsync();
+            return await cmd.ExecuteNonQueryAsync();
         }
 
         /// <summary>用完整SQL验证语法（SELECT TOP 0）</summary>
@@ -520,14 +520,14 @@ namespace DbSyncTool.DataAccess
         }
 
         /// <summary>执行任意非查询SQL（UPDATE/DELETE/CALL等）</summary>
-        public async Task ExecuteNonQueryAsync(string sql)
+        public async Task<int> ExecuteNonQueryAsync(string sql)
         {
             await using var conn = new MySqlConnection(_connectionString);
             await conn.OpenAsync();
             var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
             cmd.CommandTimeout = 300;
-            await cmd.ExecuteNonQueryAsync();
+            return await cmd.ExecuteNonQueryAsync();
         }
 
         /// <summary>用完整SQL验证语法（SELECT * LIMIT 0）</summary>

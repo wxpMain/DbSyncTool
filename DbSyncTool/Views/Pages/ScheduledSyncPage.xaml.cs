@@ -1544,7 +1544,7 @@ namespace DbSyncTool.Views.Pages
                     }, cancellationToken)).ToList();
 
                 await System.Threading.Tasks.Task.WhenAll(new[] { producer }.Concat(workers));
-                progress.Status = $"BOM同步完成 成功{progress.Success}条 失败{progress.Failed}条";
+                progress.Status = $"接口数据同步完成 成功{progress.Success}条 失败{progress.Failed}条 耗时{progress.Elapsed.TotalSeconds:F1}秒";
                 progress.Elapsed = sw.Elapsed;
                 onProgress(progress);
                 return;
